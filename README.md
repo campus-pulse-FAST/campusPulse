@@ -37,16 +37,16 @@ All services share a single PostgreSQL database with **separate schemas** per se
 
 Before you start, make sure you have these installed:
 
-1. **[Bun](https://bun.sh)** (v1.0+)
+1. **[Docker Desktop](https://www.docker.com/products/docker-desktop/)** (required)
    ```bash
-   curl -fsSL https://bun.sh/install | bash
-   bun --version  # verify
+   docker --version
+   docker compose version
    ```
 
-2. **[Docker Desktop](https://www.docker.com/products/docker-desktop/)**
+2. **[Bun](https://bun.sh)** (v1.0+) — only needed for local dev without Docker
    ```bash
-   docker --version   # verify
-   docker-compose --version
+   curl -fsSL https://bun.sh/install | bash
+   bun --version
    ```
 
 3. **[Git](https://git-scm.com/)**
@@ -68,63 +68,137 @@ cd campusPulse
 cp .env.example .env
 ```
 
-The defaults in `.env.example` work out of the box for local development. No changes needed.
+The defaults work out of the box. No changes needed for local development.
 
-### 3. Install dependencies
+---
+
+## Option A: Run Everything with Docker (Recommended)
+
+This is the easiest way — one command starts PostgreSQL, all 6 backend services, and the frontend.
+
+### Step 1: Make sure Docker Desktop is running
+
+Open Docker Desktop and wait until it shows "Running".
+
+### Step 2: Make sure no other PostgreSQL is running
+
+```bash
+# macOS — stop homebrew postgres if running
+brew services stop postgresql@16
+
+# Check nothing is on port 5433
+lsof -ti:5433
+```
+
+### Step 3: Start all services
+
+```bash
+docker compose up --build
+```
+
+This will:
+- Pull the PostgreSQL 16 image
+- Build Docker images for all 6 services and frontend
+- Start everything in the correct order (PostgreSQL first, then services, then frontend)
+
+Wait until you see all services logging "running on port XXXX".
+
+### Step 4: Verify
+
+Open these URLs in your browser or use curl:
+
+```bash
+# API Gateway
+curl http://localhost:3000/api/health
+
+# All microservices
+curl http://localhost:3001/health
+curl http://localhost:3002/health
+curl http://localhost:3003/health
+curl http://localhost:3004/health
+curl http://localhost:3005/health
+
+# Frontend
+open http://localhost:4000
+```
+
+### Step 5: Stop everything
+
+```bash
+# Stop all containers (keeps data)
+docker compose down
+
+# Stop and delete all data (fresh start)
+docker compose down -v
+```
+
+### Running in background (detached mode)
+
+```bash
+# Start in background
+docker compose up --build -d
+
+# View logs
+docker compose logs -f
+
+# View logs for one service
+docker compose logs -f user-service
+
+# Restart a single service
+docker compose restart event-service
+```
+
+---
+
+## Option B: Run Locally with Bun (For Development)
+
+Better for active development — gives you hot reload and faster feedback.
+
+### Step 1: Install dependencies
 
 ```bash
 bun install
 ```
 
-This installs dependencies for all workspaces (shared lib, all services, frontend) in one command.
+### Step 2: Start PostgreSQL via Docker
 
-### 4. Start PostgreSQL via Docker
-
-**Important:** Make sure no other PostgreSQL instance is running on your machine before starting.
+You still need Docker for the database:
 
 ```bash
-# Stop local PostgreSQL if running (macOS)
-brew services stop postgresql@16 2>/dev/null
-
-# Start the Docker PostgreSQL container
-docker-compose up -d postgres
+docker compose up -d postgres
 ```
-
-This starts PostgreSQL 16 on **port 5433** (mapped from container's 5432 to avoid conflicts).
 
 Verify it's running:
 ```bash
 PGPASSWORD=campus123 psql -h localhost -p 5433 -U campus -d campuspulse -c "SELECT 1"
 ```
 
-### 5. Run the services
-
-Each service can be started individually with Bun:
+### Step 3: Start each service (separate terminals)
 
 ```bash
-# Terminal 1 - API Gateway
+# Terminal 1 — API Gateway
 cd services/api-gateway && bun run src/main.ts
 
-# Terminal 2 - User Service
+# Terminal 2 — User Service
 cd services/user-service && bun run src/main.ts
 
-# Terminal 3 - Event Service
+# Terminal 3 — Event Service
 cd services/event-service && bun run src/main.ts
 
-# Terminal 4 - Registration Service
+# Terminal 4 — Registration Service
 cd services/registration-service && bun run src/main.ts
 
-# Terminal 5 - Feedback Service
+# Terminal 5 — Feedback Service
 cd services/feedback-service && bun run src/main.ts
 
-# Terminal 6 - Notification Service
+# Terminal 6 — Notification Service
 cd services/notification-service && bun run src/main.ts
 
-# Terminal 7 - Frontend
+# Terminal 7 — Frontend
 cd frontend && bun install && bun run dev
 ```
 
-Or use the root scripts:
+Or use the shortcut scripts from the repo root:
 ```bash
 bun run dev:gateway
 bun run dev:user
@@ -135,38 +209,13 @@ bun run dev:notification
 bun run dev:frontend
 ```
 
-### 6. Verify everything works
-
-Test health checks for each service:
-
-```bash
-# Gateway
-curl http://localhost:3000/api/health
-
-# Microservices
-curl http://localhost:3001/health
-curl http://localhost:3002/health
-curl http://localhost:3003/health
-curl http://localhost:3004/health
-curl http://localhost:3005/health
-```
-
-Each should return:
-```json
-{
-  "service": "<service-name>",
-  "status": "ok",
-  "timestamp": "2026-03-23T..."
-}
-```
-
 ---
 
 ## Project Structure
 
 ```
 campusPulse/
-├── docker-compose.yml          # PostgreSQL + all services
+├── docker-compose.yml          # Full stack Docker config
 ├── package.json                # Root: Bun workspaces
 ├── tsconfig.base.json          # Shared TypeScript config
 │
@@ -182,26 +231,28 @@ campusPulse/
 │       └── utils/              # HttpClientService
 │
 ├── services/
-│   ├── api-gateway/            # Port 3000 - Request routing
-│   ├── user-service/           # Port 3001 - Auth & profiles
-│   ├── event-service/          # Port 3002 - Events & venues
-│   ├── registration-service/   # Port 3003 - Registrations & waitlist
-│   ├── feedback-service/       # Port 3004 - Ratings & analytics
-│   └── notification-service/   # Port 3005 - Alerts & audit logs
+│   ├── api-gateway/            # Port 3000 — Request routing
+│   ├── user-service/           # Port 3001 — Auth & profiles
+│   ├── event-service/          # Port 3002 — Events & venues
+│   ├── registration-service/   # Port 3003 — Registrations & waitlist
+│   ├── feedback-service/       # Port 3004 — Ratings & analytics
+│   └── notification-service/   # Port 3005 — Alerts & audit logs
 │
-└── frontend/                   # Port 4000 - Next.js app
+└── frontend/                   # Port 4000 — Next.js app
 ```
 
 ---
 
 ## Database
 
-- **Engine:** PostgreSQL 16
-- **Host:** localhost
-- **Port:** 5433 (Docker mapped)
-- **Database:** campuspulse
-- **User:** campus
-- **Password:** campus123
+| Property | Value |
+|---|---|
+| Engine | PostgreSQL 16 |
+| Host | localhost |
+| Port | 5433 (Docker mapped) |
+| Database | campuspulse |
+| User | campus |
+| Password | campus123 |
 
 Each microservice owns its own schema:
 
@@ -219,8 +270,8 @@ Each microservice owns its own schema:
 
 ### Branches
 ```
-main        ← always deployable
-  └── develop     ← integration branch
+main            ← always deployable, merges from develop at sprint end
+  └── develop   ← integration branch, all PRs target this
        └── feature/SPX-description
        └── fix/SPX-description
        └── chore/SPX-description
@@ -231,13 +282,14 @@ main        ← always deployable
 feat(user-service): add login endpoint
 fix(event-service): resolve venue conflict query
 chore(root): update docker-compose
+docs(root): add setup guide
 ```
 
 ### Workflow
-1. Create feature branch from `develop`
+1. Create feature branch from `develop`: `git checkout -b feature/SP1-user-auth`
 2. Commit with conventional commit messages
 3. Push and create PR to `develop`
-4. Merge PR
+4. Merge PR on GitHub
 5. At sprint end, merge `develop` → `main`
 
 ---
@@ -262,7 +314,14 @@ docker ps | grep campuspulse
 pg_isready -h localhost -p 5433
 
 # Restart the container
-docker-compose restart postgres
+docker compose restart postgres
+```
+
+### Docker build fails
+```bash
+# Rebuild from scratch (no cache)
+docker compose build --no-cache
+docker compose up
 ```
 
 ### Bun install fails
@@ -272,7 +331,13 @@ rm -rf node_modules bun.lock
 bun install
 ```
 
-### Another PostgreSQL on port 5432
-Our setup uses port **5433** to avoid conflicts. If you have no other PostgreSQL running, you can change the port back to 5432 in:
-- `docker-compose.yml` (postgres ports)
-- Each service's `src/config/typeorm.config.ts` (default port)
+### Another PostgreSQL already on port 5432/5433
+```bash
+# Stop homebrew postgres
+brew services stop postgresql@16
+
+# Check what's using the port
+lsof -ti:5433
+
+# Our setup uses port 5433 to avoid conflicts
+```
