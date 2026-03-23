@@ -3,8 +3,8 @@ export { UserRole } from './constants/roles.enum';
 export { EventStatus, RegistrationStatus, NotificationType } from './constants/status.enum';
 
 // Interfaces
-export { ApiResponse, PaginationMeta } from './interfaces/api-response.interface';
-export { JwtPayload, RequestUser } from './interfaces/jwt-payload.interface';
+export type { ApiResponse, PaginationMeta } from './interfaces/api-response.interface';
+export type { JwtPayload, RequestUser } from './interfaces/jwt-payload.interface';
 
 // Decorators
 export { Roles, ROLES_KEY } from './decorators/roles.decorator';
