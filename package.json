@@ -1,0 +1,22 @@
+{
+  "name": "campuspulse",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CampusPulse - Campus Event Management MIS",
+  "workspaces": [
+    "libs/*",
+    "services/*",
+    "frontend"
+  ],
+  "scripts": {
+    "dev:gateway": "cd services/api-gateway && bun run start:dev",
+    "dev:user": "cd services/user-service && bun run start:dev",
+    "dev:event": "cd services/event-service && bun run start:dev",
+    "dev:registration": "cd services/registration-service && bun run start:dev",
+    "dev:feedback": "cd services/feedback-service && bun run start:dev",
+    "dev:notification": "cd services/notification-service && bun run start:dev",
+    "dev:frontend": "cd frontend && bun run dev",
+    "migration:run:all": "for dir in services/user-service services/event-service services/registration-service services/feedback-service services/notification-service; do (cd $dir && bun run migration:run); done",
+    "seed:all": "for dir in services/user-service services/event-service services/registration-service services/feedback-service services/notification-service; do (cd $dir && bun run seed); done"
+  }
+}
