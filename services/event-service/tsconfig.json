@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "baseUrl": "./src",
+    "paths": {
+      "@campuspulse/shared": ["../../libs/shared/src"],
+      "@campuspulse/shared/*": ["../../libs/shared/src/*"]
+    }
+  },
+  "include": ["src/**/*"]
+}
