@@ -1,17 +1,25 @@
-FROM oven/bun:1 AS base
+FROM oven/bun:1
 WORKDIR /app
 
-COPY package.json bun.lockb* ./
-RUN bun install --frozen-lockfile 2>/dev/null || bun install
+# Copy root workspace files
+COPY package.json bun.lock* ./
+COPY libs/shared/package.json ./libs/shared/
+COPY services/feedback-service/package.json ./services/feedback-service/
 
-COPY . .
-RUN bun run build
+# Install dependencies
+RUN cd services/feedback-service && bun install 2>/dev/null || true
 
-FROM oven/bun:1-slim
-WORKDIR /app
-COPY --from=base /app/dist ./dist
-COPY --from=base /app/node_modules ./node_modules
-COPY --from=base /app/package.json ./
+# Copy shared lib source
+COPY libs/shared/src ./libs/shared/src
+COPY libs/shared/tsconfig.json ./libs/shared/
+
+# Copy service source
+COPY services/feedback-service/src ./services/feedback-service/src
+COPY services/feedback-service/tsconfig.json ./services/feedback-service/
+COPY services/feedback-service/nest-cli.json ./services/feedback-service/
+COPY tsconfig.base.json ./
+
+WORKDIR /app/services/feedback-service
 
 EXPOSE 3004
-CMD ["bun", "run", "start:prod"]
+CMD ["bun", "run", "src/main.ts"]

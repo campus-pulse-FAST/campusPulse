@@ -1,17 +1,25 @@
-FROM oven/bun:1 AS base
+FROM oven/bun:1
 WORKDIR /app
 
-COPY package.json bun.lockb* ./
-RUN bun install --frozen-lockfile 2>/dev/null || bun install
+# Copy root workspace files
+COPY package.json bun.lock* ./
+COPY libs/shared/package.json ./libs/shared/
+COPY services/user-service/package.json ./services/user-service/
 
-COPY . .
-RUN bun run build
+# Install dependencies
+RUN cd services/user-service && bun install 2>/dev/null || true
 
-FROM oven/bun:1-slim
-WORKDIR /app
-COPY --from=base /app/dist ./dist
-COPY --from=base /app/node_modules ./node_modules
-COPY --from=base /app/package.json ./
+# Copy shared lib source
+COPY libs/shared/src ./libs/shared/src
+COPY libs/shared/tsconfig.json ./libs/shared/
+
+# Copy service source
+COPY services/user-service/src ./services/user-service/src
+COPY services/user-service/tsconfig.json ./services/user-service/
+COPY services/user-service/nest-cli.json ./services/user-service/
+COPY tsconfig.base.json ./
+
+WORKDIR /app/services/user-service
 
 EXPOSE 3001
-CMD ["bun", "run", "start:prod"]
+CMD ["bun", "run", "src/main.ts"]
