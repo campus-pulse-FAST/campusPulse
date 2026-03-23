@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./services/api-gateway/src:/app/src
+      - ./libs/shared/src:/app/libs/shared/src
+
+  user-service:
+    build:
+      context: ./services/user-service
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./services/user-service/src:/app/src
+      - ./libs/shared/src:/app/libs/shared/src
+
+  event-service:
+    build:
+      context: ./services/event-service
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./services/event-service/src:/app/src
+      - ./libs/shared/src:/app/libs/shared/src
+
+  registration-service:
+    build:
+      context: ./services/registration-service
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./services/registration-service/src:/app/src
+      - ./libs/shared/src:/app/libs/shared/src
+
+  feedback-service:
+    build:
+      context: ./services/feedback-service
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./services/feedback-service/src:/app/src
+      - ./libs/shared/src:/app/libs/shared/src
+
+  notification-service:
+    build:
+      context: ./services/notification-service
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./services/notification-service/src:/app/src
+      - ./libs/shared/src:/app/libs/shared/src
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend/src:/app/src
