@@ -10,5 +10,5 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   schema: 'users',
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
   migrations: [__dirname + '/../migrations/*{.ts,.js}'],
-  synchronize: false,
+  synchronize: process.env.NODE_ENV !== 'production',
 };
