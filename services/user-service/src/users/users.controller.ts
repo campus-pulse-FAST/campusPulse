@@ -6,6 +6,7 @@ import {
   Param,
   Body,
   Query,
+  Inject,
   UseGuards,
   ForbiddenException,
 } from '@nestjs/common';
@@ -18,7 +19,7 @@ import { UserRole } from './entities/user.entity';
 @Controller('users')
 @UseGuards(ServiceAuthGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(@Inject(UsersService) private readonly usersService: UsersService) {}
 
   @Get('me')
   getMe(@CurrentUser('id') userId: string) {

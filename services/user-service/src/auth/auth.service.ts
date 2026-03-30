@@ -1,4 +1,4 @@
-import {
+import { Inject,
   Injectable,
   ConflictException,
   UnauthorizedException,
@@ -16,6 +16,7 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @Inject(JwtService)
     private jwtService: JwtService,
   ) {}
 

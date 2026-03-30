@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
@@ -22,9 +22,9 @@ export class ProxyService {
   ];
 
   constructor(
-    private configService: ConfigService,
-    private httpService: HttpService,
-    private jwtService: JwtService,
+    @Inject(ConfigService) private configService: ConfigService,
+    @Inject(HttpService) private httpService: HttpService,
+    @Inject(JwtService) private jwtService: JwtService,
   ) {
     this.serviceRoutes = [
       { prefix: '/api/auth', url: this.configService.get('USER_SERVICE_URL', 'http://localhost:3001') },
