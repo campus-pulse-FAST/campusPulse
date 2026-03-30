@@ -159,16 +159,21 @@ frontend             http://localhost:4000             ✅
 3. **Gateway wildcard route** — `@All('*path')` didn't match requests in NestJS v10. Fixed by using a NestJS middleware (`ProxyMiddleware`) instead.
 4. **Middleware blocking public routes** — Middleware ran before checking if route was public. Fixed by using `req.originalUrl` for path matching.
 5. **GET requests failing through proxy** — Axios was sending `Content-Type: application/json` on GET requests. Fixed by only setting Content-Type for POST/PUT/PATCH.
+6. **Bun v1.3.x breaks NestJS decorators in Docker** — `emitDecoratorMetadata` not supported. Fixed by pinning Docker base image to Bun v1.1.42.
+7. **TypeORM can't infer column types in Bun** — Same `emitDecoratorMetadata` issue. Fixed by adding explicit `type: 'varchar'` to all `@Column()` decorators.
+8. **NestJS DI fails in Bun (constructor params undefined)** — Fixed by adding `@Inject(ClassName)` to every constructor parameter across all services.
+9. **Bun workspaces don't work in Docker** — `workspace:*` references fail in isolated containers. Fixed by creating a shared base Docker image (`campuspulse-base`) with all deps, and copying shared lib source directly into `node_modules/@campuspulse/shared`.
+10. **Docker builds slow (6x bun install)** — Each service was installing ~1000 packages. Fixed by pre-building a single `campuspulse-base` image with all deps, all services extend it.
 
-### Verified E2E
+### Verified E2E (Local + Docker)
 
 ```
-POST /api/auth/register  → creates user + returns JWT     ✅
-POST /api/auth/login     → validates + returns JWT         ✅
-GET  /api/users/me       → returns own profile             ✅
-PUT  /api/users/me       → updates name, phone             ✅
-GET  /api/users          → student gets 403                ✅
-GET  /api/users          → admin gets paginated list       ✅
+POST /api/auth/register  → creates user + returns JWT     ✅ Local ✅ Docker
+POST /api/auth/login     → validates + returns JWT         ✅ Local ✅ Docker
+GET  /api/users/me       → returns own profile             ✅ Local ✅ Docker
+PUT  /api/users/me       → updates name, phone             ✅ Local ✅ Docker
+GET  /api/users          → student gets 403                ✅ Local ✅ Docker
+GET  /api/users          → admin gets paginated list       ✅ Local
 ```
 
 ---

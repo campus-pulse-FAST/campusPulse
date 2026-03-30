@@ -1,9 +1,9 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Injectable, Inject, NestMiddleware } from '@nestjs/common';
 import { ProxyService } from './proxy.service';
 
 @Injectable()
 export class ProxyMiddleware implements NestMiddleware {
-  constructor(private readonly proxyService: ProxyService) {}
+  constructor(@Inject(ProxyService) private readonly proxyService: ProxyService) {}
 
   async use(req: any, res: any, next: () => void) {
     const fullPath = req.originalUrl || req.url;

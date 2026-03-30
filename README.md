@@ -74,7 +74,7 @@ The defaults work out of the box. No changes needed for local development.
 
 ## Option A: Run Everything with Docker (Recommended)
 
-This is the easiest way — one command starts PostgreSQL, all 6 backend services, and the frontend.
+This is the easiest way — two commands to start the entire stack.
 
 ### Step 1: Make sure Docker Desktop is running
 
@@ -86,26 +86,37 @@ Open Docker Desktop and wait until it shows "Running".
 # macOS — stop homebrew postgres if running
 brew services stop postgresql@16
 
-# Check nothing is on port 5433
+# Check nothing is on ports 5433, 3000-3005
 lsof -ti:5433
 ```
 
-### Step 3: Start all services
+### Step 3: Build the base image (one-time only)
+
+All backend services share a single base Docker image that has NestJS and all dependencies pre-installed. This only needs to be done **once** (or when dependencies change):
+
+```bash
+docker build -t campuspulse-base -f Dockerfile.base .
+```
+
+This takes ~30 seconds. After this, all service builds are instant since they just copy source code on top.
+
+### Step 4: Start all services
 
 ```bash
 docker compose up --build
 ```
 
 This will:
-- Pull the PostgreSQL 16 image
-- Build Docker images for all 6 services and frontend
-- Start everything in the correct order (PostgreSQL first, then services, then frontend)
+- Start PostgreSQL 16 on port 5433
+- Build and start all 6 backend services (ports 3000-3005)
+- Build and start the Next.js frontend (port 4000)
+- Wait for PostgreSQL health check before starting services
 
-Wait until you see all services logging "running on port XXXX".
+First run takes ~20 seconds. Subsequent runs are faster due to Docker caching.
 
-### Step 4: Verify
+### Step 5: Verify
 
-Open these URLs in your browser or use curl:
+Wait until you see all services logging "running on port XXXX", then test:
 
 ```bash
 # API Gateway
@@ -122,15 +133,42 @@ curl http://localhost:3005/health
 open http://localhost:4000
 ```
 
-### Step 5: Stop everything
+### Step 6: Test auth endpoints
 
 ```bash
-# Stop all containers (keeps data)
+# Register a user
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@campus.edu","password":"password123","name":"Test User"}'
+
+# Login
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@campus.edu","password":"password123"}'
+
+# Get profile (replace TOKEN with the accessToken from register/login)
+curl http://localhost:3000/api/users/me \
+  -H "Authorization: Bearer TOKEN"
+```
+
+### Step 7: Stop everything
+
+```bash
+# Stop all containers (keeps database data)
 docker compose down
 
 # Stop and delete all data (fresh start)
 docker compose down -v
 ```
+
+### Important: When to rebuild base image
+
+Rebuild the base image only when dependencies change:
+```bash
+docker build -t campuspulse-base -f Dockerfile.base .
+```
+
+You do NOT need to rebuild it when you change source code — `docker compose up --build` handles that automatically.
 
 ### Running in background (detached mode)
 
@@ -215,7 +253,9 @@ bun run dev:frontend
 
 ```
 campusPulse/
+├── Dockerfile.base             # Shared base image with all NestJS deps
 ├── docker-compose.yml          # Full stack Docker config
+├── .dockerignore               # Files excluded from Docker builds
 ├── package.json                # Root: Bun workspaces
 ├── tsconfig.base.json          # Shared TypeScript config
 │
@@ -317,9 +357,29 @@ pg_isready -h localhost -p 5433
 docker compose restart postgres
 ```
 
+### Docker: "Cannot find module '@campuspulse/shared'"
+The base image needs to be built first:
+```bash
+docker build -t campuspulse-base -f Dockerfile.base .
+docker compose up --build
+```
+
+### Docker: "campuspulse-base:latest not found"
+Same fix — build the base image first:
+```bash
+docker build -t campuspulse-base -f Dockerfile.base .
+```
+
+### Docker: Services crash with decorator/TypeORM errors
+The base image pins Bun to v1.1.42 for NestJS compatibility. If you see errors about `descriptor.value` or `emitDecoratorMetadata`, make sure you built the base image with the correct Dockerfile.base.
+
+### Docker build is slow
+First build downloads all dependencies. After that, builds are cached and take <5 seconds. If it's slow again, the Docker cache was cleared — just wait for it to finish.
+
 ### Docker build fails
 ```bash
 # Rebuild from scratch (no cache)
+docker build --no-cache -t campuspulse-base -f Dockerfile.base .
 docker compose build --no-cache
 docker compose up
 ```
@@ -341,3 +401,9 @@ lsof -ti:5433
 
 # Our setup uses port 5433 to avoid conflicts
 ```
+
+### Known Bun + NestJS Compatibility Notes
+- **Bun does not support `emitDecoratorMetadata`** — all constructor injections must use explicit `@Inject(ClassName)` decorator
+- **TypeORM column types must be explicit** — use `@Column({ type: 'varchar' })` not just `@Column()`
+- **Docker uses Bun v1.1.42** (pinned) — newer versions may break NestJS decorators
+- **Local dev uses your system Bun** — any version 1.x works locally since Bun handles TS natively
