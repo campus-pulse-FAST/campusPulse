@@ -16,8 +16,6 @@ export class ProxyController {
 
   @Get('services')
   getServices() {
-    return {
-      services: this.proxyService.getAllServiceUrls(),
-    };
+    return { services: this.proxyService.getAllServiceUrls() };
   }
 }
