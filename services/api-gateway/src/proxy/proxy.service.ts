@@ -92,12 +92,21 @@ export class ProxyService {
       headers['X-User-Role'] = user.role;
     }
 
+    const method = req.method.toUpperCase();
+    const hasBody = ['POST', 'PUT', 'PATCH'].includes(method);
+
+    if (!hasBody) {
+      delete headers['Content-Type'];
+    }
+
+    this.logger.log(`Proxying ${method} ${fullPath} → ${targetUrl}`);
+
     try {
       const response = await firstValueFrom(
         this.httpService.request({
-          method: req.method as any,
+          method: method as any,
           url: targetUrl,
-          data: req.body,
+          ...(hasBody ? { data: req.body } : {}),
           headers,
           params: req.query,
           timeout: 10000,
@@ -107,7 +116,7 @@ export class ProxyService {
 
       return { statusCode: response.status, data: response.data };
     } catch (error) {
-      this.logger.error(`Proxy error: ${error.message}`);
+      this.logger.error(`Proxy error to ${targetUrl}: ${error.message}`);
       return {
         statusCode: 502,
         data: { success: false, data: null, error: { code: 'BAD_GATEWAY', message: 'Service unavailable' }, meta: null },
