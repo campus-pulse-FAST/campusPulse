@@ -11,6 +11,7 @@ export { Roles, ROLES_KEY } from './decorators/roles.decorator';
 export { CurrentUser } from './decorators/current-user.decorator';
 
 // Guards
+export { JwtAuthGuard } from './guards/jwt-auth.guard';
 export { RolesGuard } from './guards/roles.guard';
 export { ServiceAuthGuard } from './guards/service-auth.guard';
 
