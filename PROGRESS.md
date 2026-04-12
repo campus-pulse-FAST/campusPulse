@@ -9,7 +9,7 @@ This document tracks all development progress, decisions, and changes across spr
 | Week | Sprint | Status | PRs | Features |
 |---|---|---|---|---|
 | 1 | SP0 — Foundation | **COMPLETE** | #1–#7 | Architecture setup, all services running |
-| 2 | SP1 — Auth & Users | **BACKEND COMPLETE** | #9–#11 | F10, F15 (frontend pending) |
+| 2 | SP1 — Auth & Users | **COMPLETE** | #9–#14 | F10, F15 |
 | 3 | SP2 — Events | NOT STARTED | — | F1, F2, F6, F12, F18, F19 |
 | 4 | SP3 — Regs + Feedback + Notifications | NOT STARTED | — | F2, F3, F5, F6, F7, F8, F11, F13, F17 |
 | 5 | SP4 — Advanced Features | NOT STARTED | — | F4, F9, F14, F16, F20 |
@@ -30,12 +30,12 @@ This document tracks all development progress, decisions, and changes across spr
 | F7 | Feedback Analytics | SP3 | Pending |
 | F8 | Student Participation History | SP3 | Pending |
 | F9 | Resource Allocation | SP4 | Pending |
-| F10 | Role-Based Content Filtering | SP1 | **Backend Done** |
+| F10 | Role-Based Content Filtering | SP1 | **Done** |
 | F11 | Internal Alert System | SP3 | Pending |
 | F12 | Event Categorization Engine | SP2 | Pending |
 | F13 | Audit Logging | SP3 | Pending |
 | F14 | Automated Archiving | SP4 | Pending |
-| F15 | User Profile Management | SP1 | **Backend Done** |
+| F15 | User Profile Management | SP1 | **Done** |
 | F16 | Duplicate Event Utility | SP4 | Pending |
 | F17 | Guest List Import | SP3 | Pending |
 | F18 | Public/Private Toggles | SP2 | Pending |
@@ -108,7 +108,7 @@ frontend             http://localhost:4000             ✅
 
 ---
 
-## Week 2 / SP1 — Auth & Users (BACKEND COMPLETE)
+## Week 2 / SP1 — Auth & Users (COMPLETE)
 
 **Goal:** Users can register, log in, view/edit profiles. JWT auth protects all routes. Role-based access works.
 
@@ -124,6 +124,7 @@ frontend             http://localhost:4000             ✅
 - **API Gateway Auth Middleware** — validates JWT on protected routes, injects `X-User-Id`/`X-User-Email`/`X-User-Role` headers, passes through public routes
 - **User Profile CRUD** — GET/PUT /users/me for own profile, admin-only endpoints for user list and role changes
 - **Role-Based Access** — students get 403 on admin endpoints, admins can change roles
+- **Frontend Auth Flow** — AuthContext (JWT in localStorage), Login page, Register page, Profile page (view + edit), ProtectedRoute wrapper, dynamic Navbar with role badge
 
 ### API Endpoints
 
@@ -145,12 +146,17 @@ frontend             http://localhost:4000             ✅
 | [#9](https://github.com/campus-pulse-FAST/campusPulse/pull/9) | `feature/SP1-user-auth` | User entity, register/login/refresh endpoints, bcrypt, Passport JWT |
 | [#10](https://github.com/campus-pulse-FAST/campusPulse/pull/10) | `feature/SP1-auth-middleware` | Gateway JWT middleware, service proxying, public route bypass |
 | [#11](https://github.com/campus-pulse-FAST/campusPulse/pull/11) | `feature/SP1-user-profile` | User CRUD, role-based access, ServiceAuthGuard |
+| [#13](https://github.com/campus-pulse-FAST/campusPulse/pull/13) | `fix/SP1-docker-bun-compatibility` | Docker + Bun compat fixes (Inject, column types, base image) |
+| [#14](https://github.com/campus-pulse-FAST/campusPulse/pull/14) | `feature/SP1-frontend-auth` | Login, register, profile pages, AuthContext, dynamic Navbar |
 
-### Pending
+### Frontend Pages
 
-| Branch | Owner | Description |
+| Page | Path | Description |
 |---|---|---|
-| `feature/SP1-frontend-auth` | Friend | Login, register, profile pages, AuthContext, navbar |
+| Landing | `/` | Auth-aware landing with welcome message |
+| Login | `/login` | Email + password form |
+| Register | `/register` | Full registration form (name, email, password, dept, semester, phone) |
+| Profile | `/profile` | View + edit own profile (protected) |
 
 ### Issues encountered & resolved
 
@@ -167,6 +173,7 @@ frontend             http://localhost:4000             ✅
 
 ### Verified E2E (Local + Docker)
 
+**Backend:**
 ```
 POST /api/auth/register  → creates user + returns JWT     ✅ Local ✅ Docker
 POST /api/auth/login     → validates + returns JWT         ✅ Local ✅ Docker
@@ -174,6 +181,17 @@ GET  /api/users/me       → returns own profile             ✅ Local ✅ Docke
 PUT  /api/users/me       → updates name, phone             ✅ Local ✅ Docker
 GET  /api/users          → student gets 403                ✅ Local ✅ Docker
 GET  /api/users          → admin gets paginated list       ✅ Local
+```
+
+**Frontend (Manual UI testing in Docker):**
+```
+Register flow → auto-login → redirect home                ✅
+Login flow → token persisted in localStorage              ✅
+Profile view + edit → updates persist                     ✅
+Refresh page → stays logged in                            ✅
+Visit /profile when logged out → redirects to /login      ✅
+Logout → clears token, navigates back                     ✅
+Dynamic navbar shows role badge + admin link              ✅
 ```
 
 ---
