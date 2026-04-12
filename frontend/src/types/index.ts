@@ -6,6 +6,9 @@ export interface User {
   department?: string;
   semester?: string;
   phone?: string;
+  avatarUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Event {
