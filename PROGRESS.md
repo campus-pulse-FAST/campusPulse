@@ -10,10 +10,10 @@ This document tracks all development progress, decisions, and changes across spr
 |---|---|---|---|---|
 | 1 | SP0 — Foundation | **COMPLETE** | #1–#7 | Architecture setup, all services running |
 | 2 | SP1 — Auth & Users | **COMPLETE** | #9–#14 | F10, F15 |
-| 3 | SP2 — Events | **BACKEND COMPLETE** | #16–#18 | F1, F2, F6, F10, F12, F18, F19 (frontend pending) |
-| 4 | SP3 — Regs + Feedback + Notifications | NOT STARTED | — | F2, F3, F5, F6, F7, F8, F11, F13, F17 |
-| 5 | SP4 — Advanced Features | NOT STARTED | — | F4, F9, F14, F16, F20 |
-| 6 | SP5 — Polish + Ship | NOT STARTED | — | Tests, dashboard, docs, demo |
+| 3 | SP2 — Events | **COMPLETE** | #16–#19 | F1, F2, F6, F10, F12, F18, F19 |
+| 4 | SP3 — Registrations (MVP) | **COMPLETE** | #20–#21 | F2, F3, F5, F6, F8 |
+| 5 | SP4 — Advanced Features | DEFERRED (out of scope for MVP) | — | F4, F9, F14, F16, F20 |
+| 6 | SP5 — Ship + Demo | **COMPLETE** | #22 | Seed data, demo flow, README |
 
 ---
 
@@ -22,25 +22,49 @@ This document tracks all development progress, decisions, and changes across spr
 | # | Feature | Sprint | Status |
 |---|---|---|---|
 | F1 | Venue Conflict Checker | SP2 | **Done** |
-| F2 | Capacity Threshold Control | SP2 + SP3 | Stored (enforcement in SP3) |
-| F3 | Automated Roster Generation | SP3 | Pending |
-| F4 | Attendance CSV Export | SP4 | Pending |
-| F5 | Waitlist Logic (FIFO) | SP3 | Pending |
-| F6 | Deadline Enforcement | SP2 + SP3 | Stored (enforcement in SP3) |
-| F7 | Feedback Analytics | SP3 | Pending |
-| F8 | Student Participation History | SP3 | Pending |
-| F9 | Resource Allocation | SP4 | Pending |
+| F2 | Capacity Threshold Control | SP2 + SP3 | **Done** |
+| F3 | Automated Roster Generation | SP3 | **Done** |
+| F4 | Attendance CSV Export | SP4 | Deferred |
+| F5 | Waitlist Logic (FIFO) | SP3 | **Done** |
+| F6 | Deadline Enforcement | SP2 + SP3 | **Done** |
+| F7 | Feedback Analytics | SP3 | Deferred |
+| F8 | Student Participation History | SP3 | **Done** |
+| F9 | Resource Allocation | SP4 | Deferred |
 | F10 | Role-Based Content Filtering | SP1 | **Done** |
-| F11 | Internal Alert System | SP3 | Pending |
+| F11 | Internal Alert System | SP3 | Deferred |
 | F12 | Event Categorization Engine | SP2 | **Done** |
-| F13 | Audit Logging | SP3 | Pending |
-| F14 | Automated Archiving | SP4 | Pending |
+| F13 | Audit Logging | SP3 | Deferred |
+| F14 | Automated Archiving | SP4 | Deferred |
 | F15 | User Profile Management | SP1 | **Done** |
-| F16 | Duplicate Event Utility | SP4 | Pending |
-| F17 | Guest List Import | SP3 | Pending |
+| F16 | Duplicate Event Utility | SP4 | Deferred |
+| F17 | Guest List Import | SP3 | Deferred |
 | F18 | Public/Private Toggles | SP2 | **Done** |
 | F19 | Date Range Search | SP2 | **Done** |
-| F20 | Certificate Eligibility Check | SP4 | Pending |
+| F20 | Certificate Eligibility Check | SP4 | Deferred |
+
+---
+
+## Final Status
+
+**Shipped:** 11 of 20 features (55%) — covering all the core MIS workflows.
+
+**Working demo flow:**
+- Auth (register, login, JWT, refresh, profile management with role-based access)
+- Events (CRUD, venue conflict prevention, categories, date filtering, public/private)
+- Registrations (capacity enforcement, FIFO waitlist with auto-promotion, deadline check, roster generation, participation history)
+
+**Deferred features** (would be Sprint 4-5 in a longer timeline):
+- F4 — Attendance CSV Export
+- F7 — Feedback Analytics
+- F9 — Resource Allocation
+- F11 — Internal Alert System
+- F13 — Audit Logging
+- F14 — Automated Archiving
+- F16 — Duplicate Event Utility
+- F17 — Guest List Import
+- F20 — Certificate Eligibility Check
+
+The deferred features are documented in the original PLAN.md and can be added incrementally without affecting the existing architecture.
 
 ---
 

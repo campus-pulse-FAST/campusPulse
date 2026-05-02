@@ -2,6 +2,40 @@
 
 A web-based Management Information System (MIS) for campus event management. Built with microservice architecture.
 
+## Features Implemented
+
+| # | Feature | Status |
+|---|---|---|
+| F1 | Venue Conflict Checker | ✅ Done |
+| F2 | Capacity Threshold Control | ✅ Done |
+| F3 | Automated Roster Generation | ✅ Done |
+| F5 | Waitlist FIFO | ✅ Done |
+| F6 | Deadline Enforcement | ✅ Done |
+| F8 | Student Participation History | ✅ Done |
+| F10 | Role-Based Content Filtering | ✅ Done |
+| F12 | Event Categorization Engine | ✅ Done |
+| F15 | User Profile Management | ✅ Done |
+| F18 | Public/Private Toggles | ✅ Done |
+| F19 | Date Range Search | ✅ Done |
+
+---
+
+## Demo Flow
+
+1. **Seed demo data** — `bun run scripts/seed-demo-data.ts` (creates admin, students, events, registrations)
+2. **Open** http://localhost:4000
+3. **Login as admin** — admin@campuspulse.edu / admin12345
+4. **Login as student** — student1@campuspulse.edu / student12345
+
+### Try these flows
+- **Browse events** at /events with category and date filters
+- **Register for the AI Workshop** (capacity 3) — first 3 students confirm, 4th & 5th get waitlisted
+- **Cancel as admin** — watch the next waitlisted student auto-promote
+- **Create an event** as admin — try booking the same venue/time twice (returns 409)
+- **View roster** as admin — see confirmed/waitlisted/cancelled split
+
+---
+
 ## Tech Stack
 
 - **Runtime:** [Bun](https://bun.sh) (v1.0+)
