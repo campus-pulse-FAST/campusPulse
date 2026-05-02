@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmConfig } from './config/typeorm.config';
 import { EventsModule } from './events/events.module';
+import { VenuesModule } from './venues/venues.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -10,6 +11,7 @@ import { HealthController } from './health.controller';
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot(typeOrmConfig),
     EventsModule,
+    VenuesModule,
   ],
   controllers: [HealthController],
 })
