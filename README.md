@@ -20,19 +20,48 @@ A web-based Management Information System (MIS) for campus event management. Bui
 
 ---
 
+## Demo Credentials
+
+After running the seed script, log in with any of these accounts:
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@campuspulse.edu` | `admin12345` |
+| Student 1 | `student1@campuspulse.edu` | `student12345` |
+| Student 2 | `student2@campuspulse.edu` | `student12345` |
+| Student 3 | `student3@campuspulse.edu` | `student12345` |
+| Student 4 | `student4@campuspulse.edu` | `student12345` |
+| Student 5 | `student5@campuspulse.edu` | `student12345` |
+
+> **Note:** All passwords are seeded for demo purposes only. Change them before any real deployment.
+
+---
+
 ## Demo Flow
 
 1. **Seed demo data** — `bun run scripts/seed-demo-data.ts` (creates admin, students, events, registrations)
-2. **Open** http://localhost:4000
-3. **Login as admin** — admin@campuspulse.edu / admin12345
-4. **Login as student** — student1@campuspulse.edu / student12345
+2. **Elevate admin** — first run prints SQL to make the admin user actually admin role:
+   ```bash
+   PGPASSWORD=campus123 psql -h localhost -p 5433 -U campus -d campuspulse \
+     -c "UPDATE users.users SET role='admin' WHERE email='admin@campuspulse.edu';"
+   ```
+3. **Open** http://localhost:4000
+4. **Login** with any account from the credentials table above
 
 ### Try these flows
-- **Browse events** at /events with category and date filters
-- **Register for the AI Workshop** (capacity 3) — first 3 students confirm, 4th & 5th get waitlisted
-- **Cancel as admin** — watch the next waitlisted student auto-promote
-- **Create an event** as admin — try booking the same venue/time twice (returns 409)
-- **View roster** as admin — see confirmed/waitlisted/cancelled split
+
+**As admin:**
+- Visit `/admin` — see dashboard with stats and management cards
+- Manage venues, categories, users from the admin panel
+- Create an event at `/events/create`
+- Try booking the same venue/time twice → returns 409 conflict
+- View any event's roster to see confirmed/waitlisted/cancelled split
+
+**As student:**
+- Browse events at `/events` with category and date filters
+- Register for the AI Workshop (capacity 3) — first 3 confirm, 4th & 5th get waitlisted
+- Visit `/registrations` to see your registrations grouped by upcoming/past/cancelled
+- Cancel a confirmed registration → next waitlisted user auto-promotes
 
 ---
 
