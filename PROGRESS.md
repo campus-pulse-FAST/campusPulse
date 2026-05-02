@@ -10,7 +10,7 @@ This document tracks all development progress, decisions, and changes across spr
 |---|---|---|---|---|
 | 1 | SP0 — Foundation | **COMPLETE** | #1–#7 | Architecture setup, all services running |
 | 2 | SP1 — Auth & Users | **COMPLETE** | #9–#14 | F10, F15 |
-| 3 | SP2 — Events | NOT STARTED | — | F1, F2, F6, F12, F18, F19 |
+| 3 | SP2 — Events | **BACKEND COMPLETE** | #16–#18 | F1, F2, F6, F10, F12, F18, F19 (frontend pending) |
 | 4 | SP3 — Regs + Feedback + Notifications | NOT STARTED | — | F2, F3, F5, F6, F7, F8, F11, F13, F17 |
 | 5 | SP4 — Advanced Features | NOT STARTED | — | F4, F9, F14, F16, F20 |
 | 6 | SP5 — Polish + Ship | NOT STARTED | — | Tests, dashboard, docs, demo |
@@ -21,25 +21,25 @@ This document tracks all development progress, decisions, and changes across spr
 
 | # | Feature | Sprint | Status |
 |---|---|---|---|
-| F1 | Venue Conflict Checker | SP2 | Pending |
-| F2 | Capacity Threshold Control | SP2 + SP3 | Pending |
+| F1 | Venue Conflict Checker | SP2 | **Done** |
+| F2 | Capacity Threshold Control | SP2 + SP3 | Stored (enforcement in SP3) |
 | F3 | Automated Roster Generation | SP3 | Pending |
 | F4 | Attendance CSV Export | SP4 | Pending |
 | F5 | Waitlist Logic (FIFO) | SP3 | Pending |
-| F6 | Deadline Enforcement | SP2 + SP3 | Pending |
+| F6 | Deadline Enforcement | SP2 + SP3 | Stored (enforcement in SP3) |
 | F7 | Feedback Analytics | SP3 | Pending |
 | F8 | Student Participation History | SP3 | Pending |
 | F9 | Resource Allocation | SP4 | Pending |
 | F10 | Role-Based Content Filtering | SP1 | **Done** |
 | F11 | Internal Alert System | SP3 | Pending |
-| F12 | Event Categorization Engine | SP2 | Pending |
+| F12 | Event Categorization Engine | SP2 | **Done** |
 | F13 | Audit Logging | SP3 | Pending |
 | F14 | Automated Archiving | SP4 | Pending |
 | F15 | User Profile Management | SP1 | **Done** |
 | F16 | Duplicate Event Utility | SP4 | Pending |
 | F17 | Guest List Import | SP3 | Pending |
-| F18 | Public/Private Toggles | SP2 | Pending |
-| F19 | Date Range Search | SP2 | Pending |
+| F18 | Public/Private Toggles | SP2 | **Done** |
+| F19 | Date Range Search | SP2 | **Done** |
 | F20 | Certificate Eligibility Check | SP4 | Pending |
 
 ---
@@ -196,11 +196,71 @@ Dynamic navbar shows role badge + admin link              ✅
 
 ---
 
-## Week 3 / SP2 — Events (NOT STARTED)
+## Week 3 / SP2 — Events (BACKEND COMPLETE)
 
 **Goal:** Full event lifecycle. Venue conflict detection. Category filtering. Date search. Public/private.
 
-**Features:** F1, F2, F6, F12, F18, F19
+**Date:** May 2-3, 2026
+
+**Features:** F1, F2, F6, F10, F12, F18, F19
+
+### What was built
+
+- **Event entity** — UUID PK, title, description, organizerId, categoryId, venueId, startTime, endTime, capacity, status (draft/published/archived/cancelled), isPublic, registrationDeadline
+- **Venue entity** — id, name, location, capacity, amenities (jsonb)
+- **Category entity** — id, name (unique), description, colorHex
+- **Events CRUD** — create (admin/organizer), list with filters, get, update (owner/admin), soft-delete (admin)
+- **Venues CRUD** — full CRUD for admins, public read, availability endpoint
+- **Categories CRUD** — full CRUD for admins, public read, seed endpoint for 5 defaults
+- **Venue Conflict Checker (F1)** — overlap detection with `start_time < endTime AND end_time > startTime`, excludes cancelled/archived, returns 409 with conflict details
+- **Role-based filtering (F10)** — students see only published+public events, admins see all
+- **Date range search (F19)** — `?fromDate=&toDate=` filter using TypeORM Between
+- **Category filter (F12)** — `?categoryId=X` filter on events list
+- **Public/Private (F18)** — `isPublic` flag stored, filtered for non-admins
+- **Capacity (F2)** — stored on event (enforcement in SP3 registration)
+- **Deadline (F6)** — stored as `registrationDeadline` (enforcement in SP3 registration)
+
+### API Endpoints
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | /api/events | admin/organizer | Create event |
+| GET | /api/events | any | List with filters (category, date range, search, status, public/private) |
+| GET | /api/events/:id | any | Get single event |
+| PUT | /api/events/:id | owner/admin | Update event (re-checks venue conflict) |
+| DELETE | /api/events/:id | admin | Soft delete (status='cancelled') |
+| GET | /api/venues | any | List venues |
+| POST | /api/venues | admin | Create venue |
+| GET | /api/venues/:id/availability?date=YYYY-MM-DD | any | List bookings on date |
+| GET | /api/categories | any | List categories |
+| POST | /api/categories | admin | Create category |
+| POST | /api/categories/seed | admin | Seed 5 defaults |
+
+### Pull Requests
+
+| PR | Branch | Description |
+|---|---|---|
+| [#16](https://github.com/campus-pulse-FAST/campusPulse/pull/16) | `feature/SP2-event-crud` | Events CRUD + role-based filter + date range search |
+| [#17](https://github.com/campus-pulse-FAST/campusPulse/pull/17) | `feature/SP2-venue-conflict` | Venue conflict checker + venues CRUD (F1) |
+| [#18](https://github.com/campus-pulse-FAST/campusPulse/pull/18) | `feature/SP2-event-categories` | Categories CRUD + filtering (F12) |
+
+### Pending
+
+| Branch | Owner | Description |
+|---|---|---|
+| `feature/SP2-frontend-events` | Friend | Event catalog, detail page, create/edit form |
+
+### Verified E2E
+
+```
+POST /events → conflict at same venue/time returns 409  ✅
+GET  /events?categoryId=X → filters by category         ✅
+GET  /events?fromDate=&toDate= → date range filter      ✅
+GET  /venues/:id/availability → lists bookings          ✅
+POST /categories/seed → creates 5 defaults              ✅
+Duplicate category name → 409                           ✅
+Student tries to create event → 403                     ✅
+```
 
 ---
 
