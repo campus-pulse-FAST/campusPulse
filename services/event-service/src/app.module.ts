@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmConfig } from './config/typeorm.config';
 import { EventsModule } from './events/events.module';
 import { VenuesModule } from './venues/venues.module';
+import { CategoriesModule } from './categories/categories.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -12,6 +13,7 @@ import { HealthController } from './health.controller';
     TypeOrmModule.forRoot(typeOrmConfig),
     EventsModule,
     VenuesModule,
+    CategoriesModule,
   ],
   controllers: [HealthController],
 })
