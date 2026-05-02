@@ -1,0 +1,146 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: campuspulse
+      POSTGRES_USER: campus
+      POSTGRES_PASSWORD: campus123
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U campus -d campuspulse"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - USER_SERVICE_URL=http://user-service:3001
+      - EVENT_SERVICE_URL=http://event-service:3002
+      - REGISTRATION_SERVICE_URL=http://registration-service:3003
+      - FEEDBACK_SERVICE_URL=http://feedback-service:3004
+      - NOTIFICATION_SERVICE_URL=http://notification-service:3005
+      - JWT_SECRET=campuspulse-jwt-secret-dev
+      - INTERNAL_SERVICE_KEY=campuspulse-internal-key-dev
+    depends_on:
+      - user-service
+      - event-service
+      - registration-service
+      - feedback-service
+      - notification-service
+
+  user-service:
+    build:
+      context: .
+      dockerfile: services/user-service/Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=campus
+      - DB_PASSWORD=campus123
+      - DB_NAME=campuspulse
+      - JWT_SECRET=campuspulse-jwt-secret-dev
+      - INTERNAL_SERVICE_KEY=campuspulse-internal-key-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  event-service:
+    build:
+      context: .
+      dockerfile: services/event-service/Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=campus
+      - DB_PASSWORD=campus123
+      - DB_NAME=campuspulse
+      - NOTIFICATION_SERVICE_URL=http://notification-service:3005
+      - INTERNAL_SERVICE_KEY=campuspulse-internal-key-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  registration-service:
+    build:
+      context: .
+      dockerfile: services/registration-service/Dockerfile
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=campus
+      - DB_PASSWORD=campus123
+      - DB_NAME=campuspulse
+      - EVENT_SERVICE_URL=http://event-service:3002
+      - USER_SERVICE_URL=http://user-service:3001
+      - NOTIFICATION_SERVICE_URL=http://notification-service:3005
+      - INTERNAL_SERVICE_KEY=campuspulse-internal-key-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  feedback-service:
+    build:
+      context: .
+      dockerfile: services/feedback-service/Dockerfile
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=campus
+      - DB_PASSWORD=campus123
+      - DB_NAME=campuspulse
+      - INTERNAL_SERVICE_KEY=campuspulse-internal-key-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    ports:
+      - "3005:3005"
+    environment:
+      - PORT=3005
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=campus
+      - DB_PASSWORD=campus123
+      - DB_NAME=campuspulse
+      - INTERNAL_SERVICE_KEY=campuspulse-internal-key-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "4000:4000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3000
+    depends_on:
+      - api-gateway
+
+volumes:
+  pgdata:

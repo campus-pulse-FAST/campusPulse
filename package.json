@@ -9,14 +9,36 @@
     "frontend"
   ],
   "scripts": {
-    "dev:gateway": "cd services/api-gateway && bun run start:dev",
-    "dev:user": "cd services/user-service && bun run start:dev",
-    "dev:event": "cd services/event-service && bun run start:dev",
-    "dev:registration": "cd services/registration-service && bun run start:dev",
-    "dev:feedback": "cd services/feedback-service && bun run start:dev",
-    "dev:notification": "cd services/notification-service && bun run start:dev",
+    "dev": "concurrently \"bun run dev:gateway\" \"bun run dev:user\" \"bun run dev:event\" \"bun run dev:registration\" \"bun run dev:feedback\" \"bun run dev:notification\" \"bun run dev:frontend\"",
+    "dev:gateway": "cd services/api-gateway && bun run src/main.ts",
+    "dev:user": "cd services/user-service && bun run src/main.ts",
+    "dev:event": "cd services/event-service && bun run src/main.ts",
+    "dev:registration": "cd services/registration-service && bun run src/main.ts",
+    "dev:feedback": "cd services/feedback-service && bun run src/main.ts",
+    "dev:notification": "cd services/notification-service && bun run src/main.ts",
     "dev:frontend": "cd frontend && bun run dev",
+    "dev:services": "concurrently \"bun run dev:gateway\" \"bun run dev:user\" \"bun run dev:event\" \"bun run dev:registration\" \"bun run dev:feedback\" \"bun run dev:notification\"",
+    "build": "bun run build:shared && bun run build:services && bun run build:frontend",
+    "build:shared": "cd libs/shared && bun run build",
+    "build:gateway": "cd services/api-gateway && bun run build",
+    "build:user": "cd services/user-service && bun run build",
+    "build:event": "cd services/event-service && bun run build",
+    "build:registration": "cd services/registration-service && bun run build",
+    "build:feedback": "cd services/feedback-service && bun run build",
+    "build:notification": "cd services/notification-service && bun run build",
+    "build:services": "concurrently \"bun run build:gateway\" \"bun run build:user\" \"bun run build:event\" \"bun run build:registration\" \"bun run build:feedback\" \"bun run build:notification\"",
+    "build:frontend": "cd frontend && bun run build",
+    "docker:up": "docker compose up --build",
+    "docker:up:detach": "docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:down:clean": "docker compose down -v",
+    "docker:logs": "docker compose logs -f",
+    "docker:postgres": "docker compose up -d postgres",
     "migration:run:all": "for dir in services/user-service services/event-service services/registration-service services/feedback-service services/notification-service; do (cd $dir && bun run migration:run); done",
     "seed:all": "for dir in services/user-service services/event-service services/registration-service services/feedback-service services/notification-service; do (cd $dir && bun run seed); done"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0",
+    "tsconfig-paths": "^4.2.0"
   }
 }
